@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRO Regatta Planning – Under the Racing Rules of Sailing</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+3:wght@400;500;600;700&family=Source+Code+Pro:wght@500&display=swap');
+
+:root {
+  --navy:#0a1628; --navy-mid:#1e3a5f; --amber:#d4a017; --amber-bright:#ffd966;
+  --bg-page:#f0f4f8; --bg-white:#ffffff; --bg-alt:#e8edf3;
+  --text-dark:#0a1628; --text-mid:#1e3a5f; --text-muted:#4a5568;
+  --warn-bg:#fff0f0; --warn-border:#c0392b; --warn-text:#7b1d1d;
+  --info-bg:#e8f4fd; --info-border:#2980b9; --info-text:#1a4971;
+  --ok-bg:#eafaf1; --ok-border:#27ae60; --ok-text:#1a5c35;
+  --gold-bg:#fff8e1; --gold-border:#d4a017; --gold-text:#6b4d00;
+  --sidebar-w:272px; --header-h:68px; --radius:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:16px;}
+body{font-family:'Source Sans 3',sans-serif;background:var(--bg-page);color:var(--text-dark);min-height:100vh;display:flex;flex-direction:column;-webkit-text-size-adjust:100%;}
+
+/* HEADER */
+header{background:var(--navy);border-bottom:3px solid var(--amber);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:var(--header-h);position:sticky;top:0;z-index:300;box-shadow:0 2px 14px rgba(0,0,0,0.4);flex-shrink:0;}
+.header-left{display:flex;align-items:center;gap:12px;min-width:0;}
+.mobile-menu-btn{display:none;background:#1a3a5c;border:2px solid var(--amber);border-radius:7px;color:var(--amber-bright);font-size:1.25rem;cursor:pointer;min-height:44px;min-width:44px;align-items:center;justify-content:center;flex-shrink:0;line-height:1;transition:background 0.15s;}
+.mobile-menu-btn:hover{background:#1e3a5f;}
+.anchor-icon{width:40px;height:40px;background:var(--amber);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;color:var(--navy);}
+header h1{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:#fff;line-height:1.25;min-width:0;}
+header h1 .sub1{display:block;font-size:0.67rem;font-weight:500;color:var(--amber-bright);font-family:'Source Sans 3',sans-serif;letter-spacing:0.07em;text-transform:uppercase;margin-top:1px;}
+header h1 .sub2{display:block;font-size:0.62rem;font-weight:500;color:#c8d8ec;font-family:'Source Sans 3',sans-serif;letter-spacing:0.03em;font-style:italic;}
+.header-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.api-status{font-size:0.78rem;font-weight:700;color:var(--amber-bright);background:#1a3a5c;border:2px solid var(--amber-bright);border-radius:20px;padding:6px 14px;cursor:pointer;transition:background 0.2s;white-space:nowrap;min-height:38px;}
+.api-status:hover{background:#1e3a5f;}
+.api-status.connected{border-color:#2ecc71;color:#2ecc71;background:#0d2e1a;}
+
+/* LAYOUT */
+.app-layout{display:flex;flex:1;overflow:hidden;height:calc(100vh - var(--header-h));}
+
+/* SIDEBAR */
+nav.sidebar{width:var(--sidebar-w);background:var(--navy);border-right:3px solid var(--amber);overflow-y:auto;flex-shrink:0;padding-bottom:24px;}
+.sidebar-brand{padding:16px 18px 14px;border-bottom:2px solid #1e3a5f;background:#060e1a;}
+.sidebar-brand-title{font-family:'Playfair Display',serif;font-size:0.95rem;font-weight:700;color:#fff;line-height:1.3;}
+.sidebar-brand-sub{display:block;font-size:0.65rem;color:var(--amber-bright);font-weight:700;letter-spacing:0.06em;text-transform:uppercase;margin-top:3px;}
+.sidebar-brand-author{display:block;font-size:0.62rem;color:#c8d8ec;font-style:italic;margin-top:2px;}
+.nav-section-label{font-size:0.62rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--amber-bright);padding:16px 18px 5px;font-weight:700;border-top:1px solid #1e3a5f;margin-top:4px;}
+.nav-item{display:flex;align-items:center;gap:11px;padding:12px 18px;cursor:pointer;transition:background 0.15s,border-color 0.15s;font-size:0.9rem;font-weight:500;color:#dce8f5;border-left:4px solid transparent;line-height:1.3;min-height:48px;}
+.nav-item:hover{background:#132340;color:#fff;border-left-color:rgba(212,160,23,0.5);}
+.nav-item.active{background:#1e3a5f;color:var(--amber-bright);border-left-color:var(--amber-bright);font-weight:700;}
+.nav-item .icon{font-size:1.1rem;width:24px;text-align:center;flex-shrink:0;line-height:1;}
+
+/* MAIN */
+main{flex:1;overflow-y:auto;background:var(--bg-page);}
+.section{display:none;padding:28px 36px;max-width:900px;animation:fadeIn 0.25s ease;}
+.section.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+/* AI PANEL */
+.ai-panel{width:350px;background:var(--navy);border-left:3px solid var(--amber);display:flex;flex-direction:column;flex-shrink:0;}
+.ai-panel-header{padding:14px 18px;border-bottom:3px solid var(--amber);background:#060e1a;}
+.ai-panel-header h3{font-family:'Playfair Display',serif;font-size:1rem;color:var(--amber-bright);font-weight:700;}
+.ai-panel-header p{font-size:0.71rem;color:#c8d8ec;margin-top:4px;line-height:1.45;font-weight:500;}
+.chat-messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:#0d1e35;}
+.msg{padding:11px 14px;border-radius:9px;font-size:0.875rem;line-height:1.6;max-width:97%;}
+.msg.system{background:#1a3a5c;border:2px solid var(--amber);color:#f0f6ff;align-self:flex-start;}
+.msg.user{background:#1e3a5f;border:2px solid #5a88bb;color:#fff;align-self:flex-end;}
+.msg.assistant{background:#102540;border:2px solid #3d7bbf;color:#e8f2ff;align-self:flex-start;white-space:pre-wrap;}
+.msg.loading{background:#1a3a5c;border:2px solid var(--amber);align-self:flex-start;padding:12px 16px;}
+.typing-dots span{display:inline-block;width:8px;height:8px;background:var(--amber-bright);border-radius:50%;margin:0 3px;animation:bounce 1.2s infinite;}
+.typing-dots span:nth-child(2){animation-delay:.2s}.typing-dots span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-7px)}}
+.ai-instructions{background:#1a3a5c;border:2px solid var(--amber);border-radius:8px;padding:11px 13px;}
+.ai-instructions-title{font-size:0.74rem;font-weight:700;color:var(--amber-bright);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px;}
+.ai-instructions p{font-size:0.73rem;color:#d0e4f5;line-height:1.5;margin:0;}
+.ai-instructions-tip{margin-top:6px;font-size:0.7rem;color:var(--amber-bright);font-weight:600;line-height:1.45;border-top:1px solid rgba(212,160,23,0.3);padding-top:6px;}
+.chat-input-area{padding:10px 12px;border-top:2px solid #1e3a5f;display:flex;flex-direction:column;gap:7px;background:#0a1628;}
+.quick-questions{display:flex;flex-wrap:wrap;gap:5px;}
+.quick-q{font-size:0.72rem;padding:5px 10px;background:#1a3a5c;border:2px solid var(--amber);border-radius:20px;color:var(--amber-bright);cursor:pointer;transition:background 0.15s;font-weight:700;min-height:32px;line-height:1.2;}
+.quick-q:hover{background:#1e3a5f;}
+.chat-input-row{display:flex;gap:8px;}
+#chatInput{flex:1;background:#1a2e48;border:2px solid #5a88bb;border-radius:8px;padding:10px 13px;color:#fff;font-family:'Source Sans 3',sans-serif;font-size:0.9rem;resize:none;min-height:44px;max-height:100px;}
+#chatInput:focus{outline:none;border-color:var(--amber-bright);}
+#chatInput::placeholder{color:#7a98b8;}
+#sendBtn{background:var(--amber);border:none;border-radius:8px;width:48px;height:48px;cursor:pointer;color:var(--navy);font-size:1.15rem;font-weight:700;transition:background 0.15s;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+#sendBtn:hover{background:var(--amber-bright);}
+#sendBtn:disabled{opacity:0.35;cursor:not-allowed;}
+.cost-note{font-size:0.64rem;color:#8aaac8;text-align:center;line-height:1.4;font-weight:500;}
+
+/* MODALS */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:400;align-items:center;justify-content:center;padding:16px;}
+.modal-overlay.open{display:flex;}
+.modal{background:#fff;border:2px solid var(--amber);border-radius:var(--radius);padding:28px;max-width:520px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.4);max-height:90vh;overflow-y:auto;}
+.modal.wide{max-width:700px;}
+.modal h2{font-family:'Playfair Display',serif;color:var(--navy);margin-bottom:10px;font-size:1.3rem;}
+.modal p{font-size:0.9rem;color:var(--text-mid);line-height:1.6;margin-bottom:12px;}
+.modal-steps{background:var(--bg-alt);border-left:4px solid var(--navy-mid);border-radius:0 8px 8px 0;padding:14px 16px;margin:14px 0;font-size:0.875rem;line-height:1.7;color:var(--text-dark);}
+.modal-steps ol{padding-left:18px;}
+.modal-steps li{margin-bottom:4px;}
+.modal-steps a{color:var(--navy-mid);font-weight:600;}
+.cost-info{background:var(--gold-bg);border:1.5px solid var(--gold-border);border-radius:8px;padding:12px 14px;font-size:0.85rem;margin-bottom:16px;color:var(--gold-text);line-height:1.55;}
+.cost-info strong{color:var(--navy);}
+#apiKeyInput{width:100%;background:#f8fafc;border:2px solid #b0c4d8;border-radius:8px;padding:11px 14px;color:var(--text-dark);font-family:'Source Code Pro',monospace;font-size:0.875rem;margin-bottom:14px;}
+#apiKeyInput:focus{outline:none;border-color:var(--navy-mid);}
+.modal-btns{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;}
+.btn{padding:11px 22px;border-radius:8px;border:none;cursor:pointer;font-family:'Source Sans 3',sans-serif;font-size:0.9rem;font-weight:700;transition:all 0.15s;min-height:44px;}
+.btn-primary{background:var(--navy);color:#fff;}
+.btn-primary:hover{background:var(--navy-mid);}
+.btn-secondary{background:transparent;color:var(--text-mid);border:2px solid #b0c4d8;}
+.btn-secondary:hover{border-color:var(--navy-mid);color:var(--navy);}
+.btn-amber{background:var(--amber);color:var(--navy);font-weight:700;}
+.btn-amber:hover{background:var(--amber-bright);}
+.btn-sm{padding:7px 14px;font-size:0.82rem;min-height:36px;}
+.btn-group{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;}
+
+/* CONTENT */
+.page-title{font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:700;color:var(--navy);margin-bottom:4px;line-height:1.2;}
+.page-subtitle{font-size:0.82rem;color:var(--amber);margin-bottom:24px;letter-spacing:0.06em;text-transform:uppercase;font-weight:700;}
+.rule-ref{display:inline-block;background:var(--navy);border-radius:4px;padding:1px 7px;font-size:0.75rem;font-family:'Source Code Pro',monospace;font-weight:500;color:var(--amber-bright);margin-left:4px;vertical-align:middle;}
+.card{background:var(--bg-white);border:1.5px solid #c8d8e8;border-left:4px solid var(--navy-mid);border-radius:var(--radius);padding:18px 20px;margin-bottom:14px;box-shadow:0 2px 8px rgba(10,22,40,0.07);}
+.card:hover{border-left-color:var(--amber);}
+.card-title{font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--navy);margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;line-height:1.3;}
+.card-title .badge{font-family:'Source Sans 3',sans-serif;font-size:0.68rem;background:var(--navy);color:var(--amber-bright);border-radius:4px;padding:2px 7px;font-weight:700;letter-spacing:0.06em;}
+p.body-text{font-size:0.9rem;line-height:1.7;color:var(--text-mid);margin-bottom:8px;}
+
+.process-steps-list{counter-reset:step;list-style:none;margin:14px 0;}
+.process-steps-list li{counter-increment:step;display:flex;gap:12px;margin-bottom:14px;font-size:0.9rem;line-height:1.6;color:var(--text-mid);align-items:flex-start;}
+.process-steps-list li::before{content:counter(step);background:var(--navy);color:var(--amber-bright);width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.82rem;flex-shrink:0;margin-top:2px;}
+.step-content strong{display:block;color:var(--navy);font-weight:700;margin-bottom:2px;font-size:0.93rem;}
+
+.cl{list-style:none;margin:10px 0;}
+.cl li{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid #d8e4ee;font-size:0.88rem;color:var(--text-dark);line-height:1.5;}
+.cl li:last-child{border-bottom:none;}
+.cl li .bul{flex-shrink:0;margin-top:2px;font-size:0.85rem;}
+.cl li .bul.req{color:var(--navy);font-weight:700;}
+.cl li .bul.opt{color:var(--amber);}
+
+.tabs{display:flex;border-bottom:2px solid #c8d8e8;margin-bottom:22px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab-btn{padding:10px 16px;background:transparent;border:none;color:var(--text-muted);font-family:'Source Sans 3',sans-serif;font-size:0.875rem;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all 0.18s;font-weight:600;white-space:nowrap;min-height:44px;}
+.tab-btn:hover{color:var(--navy);}
+.tab-btn.active{color:var(--navy);border-bottom-color:var(--amber);}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+
+.alert{padding:13px 16px;border-radius:8px;font-size:0.875rem;line-height:1.6;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start;}
+.alert-icon{font-size:1.05rem;flex-shrink:0;margin-top:1px;}
+.alert-warning{background:var(--warn-bg);border:1.5px solid var(--warn-border);border-left:4px solid var(--warn-border);color:var(--warn-text);}
+.alert-info{background:var(--info-bg);border:1.5px solid var(--info-border);border-left:4px solid var(--info-border);color:var(--info-text);}
+.alert-gold{background:var(--gold-bg);border:1.5px solid var(--gold-border);border-left:4px solid var(--gold-border);color:var(--gold-text);}
+
+.acc{border:1.5px solid #c8d8e8;border-radius:8px;margin-bottom:8px;overflow:hidden;}
+.acc-hdr{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;cursor:pointer;background:var(--bg-white);font-size:0.9rem;font-weight:600;color:var(--navy);transition:background 0.15s;min-height:48px;user-select:none;}
+.acc-hdr:hover{background:var(--bg-alt);}
+.acc-hdr.open{background:var(--navy);color:var(--amber-bright);}
+.acc-hdr .chev{font-size:0.8rem;transition:transform 0.2s;color:var(--amber);}
+.acc-hdr.open .chev{transform:rotate(180deg);}
+.acc-body{display:none;padding:14px 16px;background:var(--bg-alt);border-top:1px solid #c8d8e8;}
+.acc-body.open{display:block;}
+
+.upload-zone{border:2px dashed #b0c4d8;border-radius:8px;padding:28px 20px;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--bg-white);margin-bottom:12px;}
+.upload-zone:hover,.upload-zone.drag-over{border-color:var(--amber);background:var(--gold-bg);}
+.upload-zone input[type="file"]{display:none;}
+.upload-icon{font-size:2rem;margin-bottom:6px;}
+.upload-label{font-weight:700;color:var(--navy);font-size:0.95rem;}
+.upload-sub{font-size:0.78rem;color:var(--text-muted);margin-top:4px;}
+.upload-filename{display:none;background:var(--gold-bg);border:1.5px solid var(--gold-border);border-radius:6px;padding:8px 14px;font-size:0.84rem;color:var(--gold-text);margin-bottom:10px;justify-content:space-between;align-items:center;}
+.upload-filename.visible{display:flex;}
+
+.review-output{background:var(--bg-alt);border:2px solid var(--navy-mid);border-radius:10px;padding:18px;font-size:0.875rem;line-height:1.8;white-space:pre-wrap;font-family:'Source Sans 3',sans-serif;color:var(--text-dark);margin-top:14px;display:none;}
+.review-output.visible{display:block;}
+.rewrite-output{background:var(--bg-alt);border:2px solid var(--navy-mid);border-radius:8px;padding:16px;font-size:0.85rem;line-height:1.8;white-space:pre-wrap;color:var(--text-dark);margin-bottom:14px;max-height:60vh;overflow-y:auto;min-height:120px;}
+
+.section-divider{border:none;border-top:2px solid #d0dde8;margin:24px 0;}
+h2.subsection{font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--navy);margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.home-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px;}
+
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:#b0c4d8;border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:var(--navy-mid);}
+
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--navy);border-top:3px solid var(--amber);z-index:300;height:62px;box-shadow:0 -4px 20px rgba(0,0,0,0.5);}
+.mobile-nav-inner{display:flex;height:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.mobile-nav-inner::-webkit-scrollbar{display:none;}
+.mobile-nav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0 12px;cursor:pointer;flex-shrink:0;min-width:64px;border-top:3px solid transparent;margin-top:-3px;transition:background 0.15s;-webkit-tap-highlight-color:transparent;}
+.mobile-nav-item:active{background:#1a3a5c;}
+.mobile-nav-item.active{border-top-color:var(--amber-bright);background:#1a3a5c;}
+.mobile-nav-item .mnav-icon{font-size:1.25rem;line-height:1;color:#dce8f5;}
+.mobile-nav-item.active .mnav-icon{color:var(--amber-bright);}
+.mobile-nav-item .mnav-label{font-size:0.57rem;font-weight:700;color:#8aaac8;text-transform:uppercase;letter-spacing:0.04em;text-align:center;line-height:1.2;}
+.mobile-nav-item.active .mnav-label{color:var(--amber-bright);}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;}
+.sidebar-overlay.open{display:block;}
+
+@media(max-width:900px){.ai-panel{display:none;}.section{padding:20px 18px;}.home-grid{grid-template-columns:1fr;}}
+@media(max-width:768px){
+  :root{--header-h:58px;}
+  header{padding:0 10px;}
+  header h1{font-size:0.95rem;}
+  header h1 .sub1{font-size:0.6rem;}
+  header h1 .sub2{display:none;}
+  .anchor-icon{width:34px;height:34px;font-size:15px;}
+  .mobile-menu-btn{display:flex;}
+  nav.sidebar{position:fixed;top:0;left:0;width:min(300px,88vw);height:100vh;z-index:250;transform:translateX(-100%);transition:transform 0.25s ease;padding-top:calc(var(--header-h) + 4px);box-shadow:4px 0 24px rgba(0,0,0,0.5);}
+  nav.sidebar.open{transform:translateX(0);}
+  .app-layout{height:calc(100vh - var(--header-h) - 62px);}
+  .mobile-nav{display:block;}
+  .section{padding:16px 14px 20px;}
+  .page-title{font-size:1.4rem;}
+  .page-subtitle{font-size:0.75rem;margin-bottom:18px;}
+  .modal{padding:22px 18px;}
+  .modal-btns{flex-direction:column;}
+  .modal-btns .btn{width:100%;text-align:center;}
+  .btn-group{flex-direction:column;}
+}
+@media(max-width:480px){.section{padding:14px 12px 16px;}.page-title{font-size:1.25rem;}}
+</style>
+</head>
+<body>
+
+<!-- API KEY MODAL -->
+<div class="modal-overlay" id="apiModal">
+  <div class="modal">
+    <h2>⚓ Set Your Anthropic API Key</h2>
+    <p>The PRO Regatta Assistant uses the Anthropic Claude API to review your NOR and Sailing Instructions and answer questions about the Racing Rules of Sailing. You supply your own key — queries go directly from your browser to Anthropic.</p>
+    <div class="modal-steps">
+      <strong>How to get an API key:</strong>
+      <ol>
+        <li>Go to <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></li>
+        <li>Create a free account (or log in)</li>
+        <li>Navigate to <strong>API Keys</strong> → <strong>Create Key</strong></li>
+        <li>Copy the key (starts with <code>sk-ant-</code>) and paste it below</li>
+        <li>Add a <strong>payment method</strong> at Anthropic — required before calls will work</li>
+      </ol>
+    </div>
+    <div class="cost-info">
+      <strong>💡 About API costs:</strong><br>
+      This assistant uses the <strong>claude-sonnet-4-20250514</strong> model. A document review costs approximately <strong>USD $0.01–$0.05</strong>. A full session is typically under $0.25 USD.<br><br>
+      <strong>All fees go directly to Anthropic.</strong> This tool is provided free of charge by the author. Your API key is stored only in your browser's local memory and is never transmitted anywhere except directly to Anthropic's servers. Use Chrome, Edge, or Safari for best results.
+    </div>
+    <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..." />
+    <div class="modal-btns">
+      <button class="btn btn-secondary" onclick="closeModal()">Skip for now</button>
+      <button class="btn btn-primary" id="saveKeyBtn" onclick="saveApiKey()">Save Key &amp; Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- REWRITE MODAL -->
+<div class="modal-overlay" id="rewriteModal">
+  <div class="modal wide">
+    <h2 id="rewriteModalTitle">✏️ Rewritten Document</h2>
+    <p>Review the rewritten document below. Copy it to your word processor to finalize. This is a draft — verify all event-specific details before publishing.</p>
+    <div class="rewrite-output" id="rewriteModalContent">Generating…</div>
+    <div class="modal-btns">
+      <button class="btn btn-secondary" onclick="closeRewriteModal()">Close</button>
+      <button class="btn btn-primary" onclick="copyRewrite()">📋 Copy to Clipboard</button>
+    </div>
+  </div>
+</div>
+
+<!-- MOBILE NAV -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<nav class="mobile-nav">
+  <div class="mobile-nav-inner">
+    <div class="mobile-nav-item active" onclick="showSection('home');setMA(this)"><span class="mnav-icon">🏠</span><span class="mnav-label">Home</span></div>
+    <div class="mobile-nav-item" onclick="showSection('nor-guide');setMA(this)"><span class="mnav-icon">📄</span><span class="mnav-label">NOR Guide</span></div>
+    <div class="mobile-nav-item" onclick="showSection('nor-review');setMA(this)"><span class="mnav-icon">⚡</span><span class="mnav-label">NOR Review</span></div>
+    <div class="mobile-nav-item" onclick="showSection('si-guide');setMA(this)"><span class="mnav-icon">📘</span><span class="mnav-label">SI Guide</span></div>
+    <div class="mobile-nav-item" onclick="showSection('si-review');setMA(this)"><span class="mnav-icon">⚡</span><span class="mnav-label">SI Review</span></div>
+    <div class="mobile-nav-item" onclick="showSection('rules-ref');setMA(this)"><span class="mnav-icon">📖</span><span class="mnav-label">Rules</span></div>
+  </div>
+</nav>
+
+<!-- HEADER -->
+<header>
+  <div class="header-left">
+    <button class="mobile-menu-btn" id="menuBtn" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+    <div class="anchor-icon">⛵</div>
+    <h1>
+      PRO Regatta Planning
+      <span class="sub1">Under the Racing Rules of Sailing 2025–2028</span>
+      <span class="sub2">Author: John Golding</span>
+    </h1>
+  </div>
+  <div class="header-right">
+    <button class="api-status" id="apiStatusBtn" onclick="openModal()">🔑 Set API Key</button>
+  </div>
+</header>
+
+<div class="app-layout">
+
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-title">⛵ PRO Regatta Planning</div>
+    <span class="sidebar-brand-sub">Racing Rules of Sailing 2025–2028</span>
+    <span class="sidebar-brand-author">Author: John Golding</span>
+  </div>
+  <div class="nav-section-label">Start Here</div>
+  <div class="nav-item active" data-section="home" onclick="showSection('home')"><span class="icon">🏠</span><span>Overview &amp; How to Use</span></div>
+  <div class="nav-section-label">Notice of Race</div>
+  <div class="nav-item" data-section="nor-guide" onclick="showSection('nor-guide')"><span class="icon">📄</span><span>NOR Requirements Guide</span></div>
+  <div class="nav-item" data-section="nor-review" onclick="showSection('nor-review')"><span class="icon">⚡</span><span>Upload &amp; Review NOR</span></div>
+  <div class="nav-section-label">Sailing Instructions</div>
+  <div class="nav-item" data-section="si-guide" onclick="showSection('si-guide')"><span class="icon">📘</span><span>SI Requirements Guide</span></div>
+  <div class="nav-item" data-section="si-review" onclick="showSection('si-review')"><span class="icon">⚡</span><span>Upload &amp; Review SIs</span></div>
+  <div class="nav-section-label">Reference</div>
+  <div class="nav-item" data-section="rules-ref" onclick="showSection('rules-ref')"><span class="icon">📖</span><span>Key Rules &amp; Prescriptions</span></div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main id="mainContent">
+
+<!-- HOME -->
+<div class="section active" id="sec-home">
+  <div class="page-title">PRO Regatta Planning</div>
+  <div class="page-subtitle">Principal Race Officers &amp; Race Organizers · RRS 2025–2028</div>
+  <div class="alert alert-gold">
+    <span class="alert-icon">⛵</span>
+    <div>This tool helps you build legally sound, complete Notice of Race and Sailing Instructions grounded in the <strong>Racing Rules of Sailing 2025–2028</strong>, Sail Canada Prescriptions, and the World Sailing Case Book. It applies the rules — it does not paraphrase them. Every answer cites the exact rule number.</div>
+  </div>
+  <div class="card">
+    <div class="card-title">📋 How to Use This Tool</div>
+    <ol class="process-steps-list">
+      <li><div class="step-content"><strong>Enter Your API Key</strong>Click <em>Set API Key</em> in the top-right corner. Paste your Anthropic API key and click Save. A green indicator confirms your key is working. You need this before the assistant can answer questions or review documents.</div></li>
+      <li><div class="step-content"><strong>Upload Your NOR or SIs</strong>Go to <em>Upload &amp; Review NOR</em> or <em>Upload &amp; Review SIs</em> in the left menu. Upload your draft document (PDF or TXT). The assistant will rate it and identify every missing or non-compliant item with exact rule references.</div></li>
+      <li><div class="step-content"><strong>Ask for a Rewrite</strong>After the review, click <em>Rewrite This Document</em>. The assistant will produce a corrected, compliant version preserving your event details. Copy it to your word processor to finalize.</div></li>
+      <li><div class="step-content"><strong>Ask Any Question</strong>Use the <strong>AI Assistant panel on the right</strong> to ask specific rules questions at any time. The more detail you provide, the more precise the answer.</div></li>
+    </ol>
+  </div>
+  <div class="alert alert-warning">
+    <span class="alert-icon">⏱</span>
+    <div><strong>NOR Publication Deadline — Plan Ahead</strong><br>
+    The NOR must be published far enough in advance to give competitors a fair and reasonable opportunity to enter. <strong>RRS Rule 89.2(a)</strong> requires the organizing authority to publish a NOR before the event. Sail Canada and World Sailing recommend a minimum of <strong>6–8 weeks for major events</strong> and at least <strong>2–4 weeks for club regattas</strong>. A late NOR creates real problems: competitors cannot arrange travel, boats, or crew; eligibility requirements may be unenforceable; entry fees may not be recoverable. If the NOR changes after publication, <strong>RRS Rule 89.2(b)</strong> controls what changes are permitted and how they must be communicated. Use this tool before you publish — not after.</div>
+  </div>
+  <div class="home-grid">
+    <div class="card" style="cursor:pointer" onclick="showSection('nor-guide')"><div class="card-title">📄 NOR Guide <span class="badge">Notice of Race</span></div><p class="body-text">What must be in every NOR. Required items with rule citations plus best-practice recommendations.</p></div>
+    <div class="card" style="cursor:pointer" onclick="showSection('nor-review')"><div class="card-title">⚡ NOR Review <span class="badge">Upload &amp; Rate</span></div><p class="body-text">Upload your draft NOR for a compliance check, completeness rating, and optional rewrite.</p></div>
+    <div class="card" style="cursor:pointer" onclick="showSection('si-guide')"><div class="card-title">📘 SI Guide <span class="badge">Sailing Instructions</span></div><p class="body-text">What must be in every set of Sailing Instructions. Required items and recommended provisions.</p></div>
+    <div class="card" style="cursor:pointer" onclick="showSection('si-review')"><div class="card-title">⚡ SI Review <span class="badge">Upload &amp; Rate</span></div><p class="body-text">Upload your draft SIs for a compliance check, completeness rating, and optional rewrite.</p></div>
+  </div>
+  <div class="alert alert-info"><span class="alert-icon">ℹ️</span><div><strong>Source documents:</strong> Racing Rules of Sailing 2025–2028 · Sail Canada Prescriptions to the RRS 2025–2028 · World Sailing Case Book 2021–2024. This tool is a planning aid only and does not constitute legal or rules advice.</div></div>
+</div>
+
+<!-- NOR GUIDE -->
+<div class="section" id="sec-nor-guide">
+  <div class="page-title">NOR Requirements Guide</div>
+  <div class="page-subtitle">Notice of Race · RRS Rule 89.2 · Sail Canada Prescriptions</div>
+  <div class="alert alert-info"><span class="alert-icon">📄</span><div>The Notice of Race is the first official document of a regatta. Under <strong>RRS Rule 89.2(a)</strong>, the organizing authority is required to publish a NOR. Use the AI Assistant on the right to ask any question about NOR requirements.</div></div>
+  <div class="alert alert-warning"><span class="alert-icon">⚠️</span><div>The NOR is a binding document. If a NOR provision conflicts with the Sailing Instructions, the SIs take precedence — but only where they are permitted to change the NOR. Under <strong>Sail Canada Prescription 88.2</strong>, Sail Canada's Prescriptions to Part 5 and Rule 65.1 cannot be changed or deleted by the NOR or SIs under any circumstances.</div></div>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab(this,'nor-req')">★ Required Items</button>
+    <button class="tab-btn" onclick="switchTab(this,'nor-rec')">◦ Recommended Items</button>
+  </div>
+  <div class="tab-content active" id="tab-nor-req">
+    <h2 class="subsection">★ Mandatory — Must Be in Every NOR <span class="rule-ref">RRS 89.2</span></h2>
+    <div class="acc"><div class="acc-hdr" onclick="toggleAcc(this)">Identity of the Organizing Authority <span class="chev">▾</span></div><div class="acc-body"><ul class="cl"><li><span class="bul req">★</span><span>Full name of the club or organization conducting the event <span class="rule-ref">RRS 89.1</span></span></li><li><span class="bul req">★</span><span>Contact details for the organizing authority <span class="rule-ref">RRS 89.2</span></span></li></ul></div></div>
+    <div class="acc"><div class="acc-hdr" onclick="toggleAcc(this)">Event Dates and Location <span class="chev">▾</span></div><div class="acc-body"><ul class="cl"><li><span class="bul req">★</span><span>Dates of the event (racing days) <span class="rule-ref">RRS 89.2</span></span></li><li><span class="bul req">★</span><span>Location — body of water, port, or sailing area <span class="rule-ref">RRS 89.2</span></span></li><li><span class="bul req">★</span><span>Approximate scheduled number of races</span></li></ul></div></div>
+    <div class="acc"><div class="acc-hdr" onclick="toggleAcc(this)">Eligible Classes and Boats <span class="chev">▾</span></div><div class="acc-body"><ul class="cl"><li><span class="bul req">★</span><span>Which classes or divisions are eligible to enter <span class="rule-ref">RRS 89.2</span></span></li><li><span class="bul req">★</span><span>Any restrictions on boat type, measurement, or certificate <span class="rule-ref">RRS 76</span></span></li><li><span class="bul req">★</span><span>Whether a rating or handicap system will be used and which one <span class="rule-ref">RRS 89.2</span></span></li></ul></div></div>
+    <div class="acc"><div class="acc-hdr" onclick="toggleAcc(this)">Rules Governing the Event <span class="chev">▾</span></div><div class="acc-body"><ul class="cl"><li><span class="bul req">★</span><span>Statement that the event is governed by the Racing Rules of Sailing <span class="rule-ref">RRS 89.2</span></span></li><li><span class="bul req">★</span><span>Any prescriptions of Sail Canada that apply <span class="rule-ref">RRS 88</span></span></li><li><span class="bul req">★</span><span>Any class rules that apply <span class="rule-ref">RRS 89.2</span></span></li><li><span class="bul req">★</span><span>Any other documents that govern the event (e.g. a measurement rule)</span></li></ul></div></div>
+    <div class="acc"><div class="acc-hdr" onclick="toggleAcc(this)">Entry Requirements <span class="chev">▾</span></div><div class="acc-body"><ul class="cl"><li><span class="bul req">★</span><span>Entry fee (if any) and payment details <span class="rule-ref">RRS 89.2</span></span></li><li><span class="bul req">★</span><span>Entry closing date and how to enter <span class="rule-ref">RRS 89.2</span></span></li><li><span class="bul req">★</span><span>Any eligibility conditions a competitor or boat must meet <span class="rule-ref">RRS 75, 76</span></span></li><li><span class="bul req">★</span><span>Sail Canada Prescription Rule 46: the person in charge, if resident in Canada, must be a Sail Canada member through an affiliated club or Provincial Sailing Association <span class="rule-ref">Sail Canada Rule 46</span></span></li></ul></div></div>
+    <div class="acc"><div class="acc-hdr" onclick="toggleAcc(this)">Prizes and Scoring <span class="chev">▾</span></div><div class="acc-body"><ul class="cl"><li><span class="bul req">★</span><span>A description of prizes offered, or a statement that none are offered <span class="rule-ref">RRS 89.2</span></span></li><li><span class="bul req">★</span><span>Scoring system — state if it is not the RRS Low Point Appendix A system <span class="rule-ref">RRS 89.2, App A</span></span></li></ul></div></div>
+    <div class="acc"><div class="acc-hdr" onclick="toggleAcc(this)">Protest Committee and Appeals <span class="chev">▾</span></div><div class="acc-body"><ul class="cl"><li><span class="bul req">★</span><span>If a no-appeal protest committee or international jury is appointed, this must be stated in the NOR or SIs <span class="rule-ref">RRS 70.5, 91</span></span></li><li><span class="bul req">★</span><span>Sail Canada Prescription to Part 5: no fee may be charged for any protest committee procedure <span class="rule-ref">Sail Canada Part 5</span></span></li><li><span class="bul req">★</span><span>If the right to appeal is to be denied, a no-appeal PC or IJ must be appointed and this must be clearly stated <span class="rule-ref">RRS 70.5</span></span></li></ul></div></div>
+  </div>
+  <div class="tab-content" id="tab-nor-rec">
+    <h2 class="subsection">◦ Recommended — Best Practice Inclusions</h2>
+    <div class="card"><ul class="cl">
+      <li><span class="bul opt">◦</span><span>Approximate first warning signal time on each racing day</span></li>
+      <li><span class="bul opt">◦</span><span>Registration location, date, and time</span></li>
+      <li><span class="bul opt">◦</span><span>Liability disclaimer and insurance requirements <span class="rule-ref">RRS 4, 65.1</span></span></li>
+      <li><span class="bul opt">◦</span><span>Minimum third party liability insurance amount</span></li>
+      <li><span class="bul opt">◦</span><span>Safety requirements — PFD/lifejacket policy, VHF channel, safety equipment</span></li>
+      <li><span class="bul opt">◦</span><span>Whether Appendix P (Special Procedures for Rule 42) applies <span class="rule-ref">App P</span></span></li>
+      <li><span class="bul opt">◦</span><span>Whether Appendix T (Arbitration) applies <span class="rule-ref">App T</span></span></li>
+      <li><span class="bul opt">◦</span><span>Notice board location and official communication method <span class="rule-ref">RRS 89.2</span></span></li>
+      <li><span class="bul opt">◦</span><span>Advertising requirements or restrictions <span class="rule-ref">App G</span></span></li>
+      <li><span class="bul opt">◦</span><span>Sail Canada Prescription Appendix G: boats over 6m not in a recognized class racing under a measurement rule or handicap must carry sail numbers on mainsails, spinnakers, and overlapping headsails with LP over 130% <span class="rule-ref">Sail Canada App G</span></span></li>
+      <li><span class="bul opt">◦</span><span>Race office contact for questions (email/phone)</span></li>
+      <li><span class="bul opt">◦</span><span>Statement that Sailing Instructions will be available and when</span></li>
+      <li><span class="bul opt">◦</span><span>Any changes to Sail Canada Prescriptions — only permitted if a no-appeal PC or IJ is appointed <span class="rule-ref">Sail Canada 88.2</span></span></li>
+    </ul></div>
+  </div>
+</div>
+
+<!-- NOR REVIEW -->
+<div class="section" id="sec-nor-review">
+  <div class="page-title">Upload &amp; Review Your NOR</div>
+  <div class="page-subtitle">Compliance Check · Completeness Rating · Optional Rewrite</div>
+  <div class="alert alert-info"><span class="alert-icon">⚡</span><div>Upload your draft Notice of Race (PDF or TXT). The assistant will review it against the RRS 2025–2028 and Sail Canada Prescriptions, rate it out of 100, list every compliance issue with exact rule references, and offer to rewrite it.</div></div>
+  <div class="card">
+    <div class="card-title">📤 Upload Your NOR</div>
+    <div class="upload-zone" id="norUploadZone" onclick="document.getElementById('norFileInput').click()" ondragover="dragOver(event,'norUploadZone')" ondragleave="dragLeave('norUploadZone')" ondrop="dropFile(event,'norFileInput','norUploadZone','nor')">
+      <input type="file" id="norFileInput" accept=".pdf,.txt,.doc,.docx" onchange="fileSelected('norFileInput','norFileName','norFileNameText','norFileSize','norReviewBtn')">
+      <div class="upload-icon">📄</div>
+      <div class="upload-label">Drop your NOR here or tap to browse</div>
+      <div class="upload-sub">Accepts PDF, TXT · Max 5MB</div>
+    </div>
+    <div class="upload-filename" id="norFileName"><span id="norFileNameText">—</span><span id="norFileSize" style="color:var(--text-muted);font-size:0.75rem;"></span></div>
+    <div class="btn-group">
+      <button class="btn btn-primary" id="norReviewBtn" onclick="reviewDocument('nor')" disabled>⚡ Review This NOR</button>
+      <button class="btn btn-secondary btn-sm" onclick="clearFile('norFileInput','norFileName','norReviewBtn','norReviewOutput','norRewriteGroup')">Clear</button>
+    </div>
+    <div class="review-output" id="norReviewOutput"></div>
+    <div class="btn-group" id="norRewriteGroup" style="display:none;">
+      <button class="btn btn-amber" onclick="rewriteDocument('nor')">✏️ Rewrite This NOR</button>
+    </div>
+  </div>
+</div>
+
+<!-- SI GUIDE -->
+<div class="section" id="sec-si-guide">
+  <div class="page-title">SI Requirements Guide</div>
+  <div class="page-subtitle">Sailing Instructions · RRS Rules 86, 89 · Sail Canada Prescriptions</div>
+  <div class="alert alert-info"><span class="alert-icon">📘</span><div>Sailing Instructions are the detailed operating rules for a specific regatta. They must be consistent with the NOR. Under <strong>RRS Rule 86.1</strong>, the SIs may only change rules that are listed as changeable.</div></div>
+  <div class="alert alert-warning"><span class="alert-icon">⚠️</span><div>In Canada, <strong>Sail Canada Prescription 88.2</strong> prohibits the SIs from changing the Sail Canada Prescriptions to Part 5 (protest procedures) and Rule 65.1 (liability) unless a no-appeal protest committee or international jury has been appointed.</div></div>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab(this,'si-req')">★ Required Items</button>
+    <button class="tab-btn" onclick="switchTab(this,'si-rec')">◦ Recommended Items</button>
+  </div>
+  <div class="tab-content active" id="tab-si-req">
+    <h2 class="subsection">★ Mandatory — Must Be in Every Set of SIs</h2>
+    <div class="acc"><div class="acc-hdr" onclick="toggleAcc(this)">Rules and Authority <span class="chev">▾</span></div><div class="acc-body"><ul class="cl"><li><span class="bul req">★</span><span>Statement that the event is governed by the Racing Rules of Sailing <span class="rule-ref">RRS 89.2</span></span></li><li><span class="bul req">★</span><span>Any changes to the rules — each change must cite the rule being changed <span class="rule-ref">RRS 86.1</span></span></li><li><span class="bul req">★</span><span>Any Sail Canada Prescriptions that are changed — only permitted if a no-appeal PC or IJ is in place <span class="rule-ref">Sail Canada 88.2</span></span></li></ul></div></div>
+    <div class="acc"><div class="acc-hdr" onclick="toggleAcc(this)">Communications and Signals <span class="chev">▾</span></div><div class="acc-body"><ul class="cl"><li><span class="bul req">★</span><span>Location of the official notice board <span class="rule-ref">RRS 89.2</span></span></li><li><span class="bul req">★</span><span>VHF radio channel(s) used by the race committee</span></li><li><span class="bul req">★</span><span>Racing signals — state if any visual signals are changed or supplemented <span class="rule-ref">RRS 25, App E</span></span></li><li><span class="bul req">★</span><span>Time and date when the SIs can first be obtained <span class="rule-ref">RRS 89.2</span></span></li></ul></div></div>
+    <div class="acc"><div class="acc-hdr" onclick="toggleAcc(this)">Schedule and Course Area <span class="chev">▾</span></div><div class="acc-body"><ul class="cl"><li><span class="bul req">★</span><span>Scheduled time of first warning signal each day <span class="rule-ref">RRS 89.2</span></span></li><li><span class="bul req">★</span><span>Description of the racing area (chart, coordinates, or written description)</span></li><li><span class="bul req">★</span><span>Description of all possible courses, or how the course will be signalled <span class="rule-ref">RRS 89.2</span></span></li><li><span class="bul req">★</span><span>The starting area and starting line</span></li><li><span class="bul req">★</span><span>The finishing line</span></li><li><span class="bul req">★</span><span>How marks are described and how they are to be left <span class="rule-ref">RRS 28</span></span></li></ul></div></div>
+    <div class="acc"><div class="acc-hdr" onclick="toggleAcc(this)">Racing and Timing Rules <span class="chev">▾</span></div><div class="acc-body"><ul class="cl"><li><span class="bul req">★</span><span>Time limits for the race — RRS Rule 35 applies unless changed <span class="rule-ref">RRS 35</span></span></li><li><span class="bul req">★</span><span>Time limit for finishing after the first boat (target time) <span class="rule-ref">RRS 35</span></span></li><li><span class="bul req">★</span><span>Recall procedure — individual recall (RRS 29.1) or general recall (RRS 29.2) <span class="rule-ref">RRS 29</span></span></li><li><span class="bul req">★</span><span>Scoring system — if Low Point (App A) is used, this may be stated by reference <span class="rule-ref">RRS App A</span></span></li><li><span class="bul req">★</span><span>How ties will be broken <span class="rule-ref">RRS App A8</span></span></li><li><span class="bul req">★</span><span>Number of races scheduled and minimum number to constitute a series <span class="rule-ref">RRS App A9</span></span></li><li><span class="bul req">★</span><span>Discards — how many and when they apply <span class="rule-ref">RRS App A9</span></span></li></ul></div></div>
+    <div class="acc"><div class="acc-hdr" onclick="toggleAcc(this)">Protests and Hearings <span class="chev">▾</span></div><div class="acc-body"><ul class="cl"><li><span class="bul req">★</span><span>Protest time limit — RRS Rule 61.3 requires a time to be fixed in the SIs <span class="rule-ref">RRS 61.3</span></span></li><li><span class="bul req">★</span><span>Where protest forms are available and where to submit them <span class="rule-ref">RRS 61.3</span></span></li><li><span class="bul req">★</span><span>Whether Appendix T (Arbitration) applies <span class="rule-ref">RRS App T</span></span></li><li><span class="bul req">★</span><span>Sail Canada Prescription to Part 5: no fee may be charged for protest proceedings <span class="rule-ref">Sail Canada Part 5</span></span></li><li><span class="bul req">★</span><span>Whether a no-appeal protest committee or international jury is in place <span class="rule-ref">RRS 70.5</span></span></li><li><span class="bul req">★</span><span>Sail Canada Prescription 91(b): a 3-member IJ under rule N1.7 requires prior written approval from Sail Canada — appeals@sailing.ca <span class="rule-ref">Sail Canada 91(b)</span></span></li></ul></div></div>
+    <div class="acc"><div class="acc-hdr" onclick="toggleAcc(this)">Safety and Equipment <span class="chev">▾</span></div><div class="acc-body"><ul class="cl"><li><span class="bul req">★</span><span>Any specific safety equipment required to be on board <span class="rule-ref">RRS 4</span></span></li><li><span class="bul req">★</span><span>PFD / lifejacket requirements — when they must be worn <span class="rule-ref">RRS 4</span></span></li><li><span class="bul req">★</span><span>Distress signal and man-overboard procedures</span></li></ul></div></div>
+    <div class="acc"><div class="acc-hdr" onclick="toggleAcc(this)">Penalties <span class="chev">▾</span></div><div class="acc-body"><ul class="cl"><li><span class="bul req">★</span><span>Whether the Two-Turns penalty (RRS 44.1) or One-Turn penalty (RRS 44.2) applies <span class="rule-ref">RRS 44</span></span></li><li><span class="bul req">★</span><span>Whether Appendix P (Special Procedures for Rule 42) applies <span class="rule-ref">RRS App P</span></span></li><li><span class="bul req">★</span><span>Any other changes to penalty options must cite the rule being changed <span class="rule-ref">RRS 86.1</span></span></li></ul></div></div>
+  </div>
+  <div class="tab-content" id="tab-si-rec">
+    <h2 class="subsection">◦ Recommended — Best Practice Inclusions</h2>
+    <div class="card"><ul class="cl">
+      <li><span class="bul opt">◦</span><span>Clear description of how and when changes to the SIs will be posted <span class="rule-ref">RRS 89.2(b)</span></span></li>
+      <li><span class="bul opt">◦</span><span>Competitor check-in or registration requirements on race days</span></li>
+      <li><span class="bul opt">◦</span><span>Briefing time and whether briefings are mandatory</span></li>
+      <li><span class="bul opt">◦</span><span>Support boat identification and restrictions</span></li>
+      <li><span class="bul opt">◦</span><span>Equipment inspection details and timing</span></li>
+      <li><span class="bul opt">◦</span><span>Measurement procedures and certificate requirements</span></li>
+      <li><span class="bul opt">◦</span><span>Sail Canada Prescription Appendix G — sail number rules for non-recognized class boats <span class="rule-ref">Sail Canada App G</span></span></li>
+      <li><span class="bul opt">◦</span><span>Exclusion zone or restricted area description <span class="rule-ref">RRS 28</span></span></li>
+      <li><span class="bul opt">◦</span><span>GPS tracking device requirement (if applicable)</span></li>
+      <li><span class="bul opt">◦</span><span>Prize-giving ceremony time and location</span></li>
+      <li><span class="bul opt">◦</span><span>Environmental rules (no anchoring zones, waste disposal)</span></li>
+      <li><span class="bul opt">◦</span><span>Liability statement: under RRS 4, competitors are solely responsible for deciding to race <span class="rule-ref">RRS 4</span></span></li>
+      <li><span class="bul opt">◦</span><span>Sail Canada Prescription 65.1: a boat found to have broken a rule and caused damage is considered at fault <span class="rule-ref">Sail Canada 65.1</span></span></li>
+      <li><span class="bul opt">◦</span><span>How redress requests should be submitted and the time limit <span class="rule-ref">RRS 62</span></span></li>
+    </ul></div>
+  </div>
+</div>
+
+<!-- SI REVIEW -->
+<div class="section" id="sec-si-review">
+  <div class="page-title">Upload &amp; Review Your SIs</div>
+  <div class="page-subtitle">Compliance Check · Completeness Rating · Optional Rewrite</div>
+  <div class="alert alert-info"><span class="alert-icon">⚡</span><div>Upload your draft Sailing Instructions (PDF or TXT). The assistant will review them against the RRS 2025–2028 and Sail Canada Prescriptions, rate them out of 100, list every compliance issue with exact rule references, and offer to rewrite them.</div></div>
+  <div class="card">
+    <div class="card-title">📤 Upload Your SIs</div>
+    <div class="upload-zone" id="siUploadZone" onclick="document.getElementById('siFileInput').click()" ondragover="dragOver(event,'siUploadZone')" ondragleave="dragLeave('siUploadZone')" ondrop="dropFile(event,'siFileInput','siUploadZone','si')">
+      <input type="file" id="siFileInput" accept=".pdf,.txt,.doc,.docx" onchange="fileSelected('siFileInput','siFileName','siFileNameText','siFileSize','siReviewBtn')">
+      <div class="upload-icon">📘</div>
+      <div class="upload-label">Drop your SIs here or tap to browse</div>
+      <div class="upload-sub">Accepts PDF, TXT · Max 5MB</div>
+    </div>
+    <div class="upload-filename" id="siFileName"><span id="siFileNameText">—</span><span id="siFileSize" style="color:var(--text-muted);font-size:0.75rem;"></span></div>
+    <div class="btn-group">
+      <button class="btn btn-primary" id="siReviewBtn" onclick="reviewDocument('si')" disabled>⚡ Review These SIs</button>
+      <button class="btn btn-secondary btn-sm" onclick="clearFile('siFileInput','siFileName','siReviewBtn','siReviewOutput','siRewriteGroup')">Clear</button>
+    </div>
+    <div class="review-output" id="siReviewOutput"></div>
+    <div class="btn-group" id="siRewriteGroup" style="display:none;">
+      <button class="btn btn-amber" onclick="rewriteDocument('si')">✏️ Rewrite These SIs</button>
+    </div>
+  </div>
+</div>
+
+<!-- RULES REF -->
+<div class="section" id="sec-rules-ref">
+  <div class="page-title">Key Rules &amp; Prescriptions</div>
+  <div class="page-subtitle">RRS 2025–2028 · Sail Canada Prescriptions · Appendix R</div>
+  <h2 class="subsection">Rules Governing Race Organization</h2>
+  <div class="card"><ul class="cl">
+    <li><span class="bul opt">▸</span><span><strong>RRS Rule 4</strong> — Decision to Race: a boat is solely responsible for deciding whether to race</span></li>
+    <li><span class="bul opt">▸</span><span><strong>RRS Rule 25</strong> — Races to be Sailed and Signals</span></li>
+    <li><span class="bul opt">▸</span><span><strong>RRS Rule 28</strong> — Sailing the Course</span></li>
+    <li><span class="bul opt">▸</span><span><strong>RRS Rule 29</strong> — Recalls</span></li>
+    <li><span class="bul opt">▸</span><span><strong>RRS Rule 35</strong> — Time Limit and Scores</span></li>
+    <li><span class="bul opt">▸</span><span><strong>RRS Rule 44</strong> — Penalties at the Time of an Incident</span></li>
+    <li><span class="bul opt">▸</span><span><strong>RRS Rule 61.3</strong> — Protest Time Limit (must be fixed in the SIs)</span></li>
+    <li><span class="bul opt">▸</span><span><strong>RRS Rule 62</strong> — Redress</span></li>
+    <li><span class="bul opt">▸</span><span><strong>RRS Rule 65.1</strong> — Informing the Protestee and Others</span></li>
+    <li><span class="bul opt">▸</span><span><strong>RRS Rule 70.5</strong> — Decisions of Protest Committees Without Appeal</span></li>
+    <li><span class="bul opt">▸</span><span><strong>RRS Rule 75</strong> — Entering a Race</span></li>
+    <li><span class="bul opt">▸</span><span><strong>RRS Rule 76</strong> — Exclusion of Boats or Competitors</span></li>
+    <li><span class="bul opt">▸</span><span><strong>RRS Rule 86.1</strong> — Changes to the Racing Rules</span></li>
+    <li><span class="bul opt">▸</span><span><strong>RRS Rule 88</strong> — National Authority Prescriptions</span></li>
+    <li><span class="bul opt">▸</span><span><strong>RRS Rule 89</strong> — Organizing Authority; Races Governed by These Rules</span></li>
+    <li><span class="bul opt">▸</span><span><strong>RRS Rule 91</strong> — Protest Committee</span></li>
+    <li><span class="bul opt">▸</span><span><strong>RRS Appendix A</strong> — Scoring</span></li>
+    <li><span class="bul opt">▸</span><span><strong>RRS Appendix G</strong> — Identification on Sails</span></li>
+    <li><span class="bul opt">▸</span><span><strong>RRS Appendix P</strong> — Special Procedures for Rule 42</span></li>
+    <li><span class="bul opt">▸</span><span><strong>RRS Appendix T</strong> — Arbitration</span></li>
+  </ul></div>
+  <h2 class="subsection">Sail Canada Prescriptions — Summary</h2>
+  <div class="card"><ul class="cl">
+    <li><span class="bul opt">▸</span><span><strong>Rule 46 — Person in Charge:</strong> If resident in Canada, the person in charge must be a Sail Canada member through an affiliated club or Provincial Sailing Association</span></li>
+    <li><span class="bul opt">▸</span><span><strong>Part 5 Prescription:</strong> No fee may be charged for any protest committee procedure under Part 5 or Appendix T</span></li>
+    <li><span class="bul opt">▸</span><span><strong>Rule 65.1:</strong> A boat found to have broken a rule and caused damage is considered at fault for the purposes of legal liability</span></li>
+    <li><span class="bul opt">▸</span><span><strong>Rule 70.3(b):</strong> Sail Canada so prescribes — appeals may be made to Sail Canada</span></li>
+    <li><span class="bul opt">▸</span><span><strong>Rule 88.2:</strong> The Prescriptions to Part 5 and Rule 65.1 cannot be changed or deleted. Other prescriptions may only be changed if a no-appeal PC or IJ is in place</span></li>
+    <li><span class="bul opt">▸</span><span><strong>Rule 91(b):</strong> A 3-member IJ under rule N1.7 requires prior written approval from Sail Canada — appeals@sailing.ca</span></li>
+    <li><span class="bul opt">▸</span><span><strong>Appendix G:</strong> Boats over 6m not in a World Sailing or recognized class racing under a measurement rule or handicap must carry sail numbers on mainsails, spinnakers, and overlapping headsails with LP over 130%</span></li>
+    <li><span class="bul opt">▸</span><span><strong>Appendix R:</strong> Appeals submitted to appeals@sailing.ca. Sail Canada may delegate to a provincial appeals committee. Decisions of a provincial appeals committee may be further appealed to Sail Canada</span></li>
+  </ul></div>
+  <div class="alert alert-gold"><span class="alert-icon">💻</span><div><strong>Deploying on GitHub Pages:</strong> Save this file as <code>index.html</code> in a GitHub repository. Go to <strong>Settings → Pages</strong>, select <strong>Deploy from a branch → main / root</strong>, and save. Each user supplies their own Anthropic API key — stored only in their browser's local storage.</div></div>
+</div>
+
+</main>
+
+<!-- AI PANEL -->
+<div class="ai-panel">
+  <div class="ai-panel-header">
+    <h3>⚓ AI Rules Assistant</h3>
+    <p>Ask any plain-language question about NOR and SI requirements, rule compliance, or race organization under the RRS 2025–2028 and Sail Canada Prescriptions. More specific questions get more precise answers.</p>
+  </div>
+  <div class="chat-messages" id="chatMessages">
+    <div class="msg system">
+      <div class="ai-instructions">
+        <div class="ai-instructions-title">How to get the best answers</div>
+        <p>Ask specific, detailed questions with context. Vague questions get general answers.</p>
+        <div class="ai-instructions-tip">Example: "What does RRS Rule 61.3 require about the protest time limit and can the SIs change it?" is better than "protest time limit?"</div>
+      </div>
+    </div>
+  </div>
+  <div class="chat-input-area">
+    <div class="quick-questions">
+      <span class="quick-q" onclick="sendQuick('What must every NOR include under RRS Rule 89.2?')">NOR requirements</span>
+      <span class="quick-q" onclick="sendQuick('What must the SIs say about the protest time limit under RRS Rule 61.3?')">Protest time limit</span>
+      <span class="quick-q" onclick="sendQuick('Which Sail Canada Prescriptions cannot be changed by the NOR or Sailing Instructions?')">Sail Canada rules</span>
+      <span class="quick-q" onclick="sendQuick('What penalty options must the SIs address under RRS Rule 44?')">Penalties in SIs</span>
+      <span class="quick-q" onclick="sendQuick('What rules govern the right to appeal and what must the NOR say under RRS Rule 70.5?')">Appeals</span>
+      <span class="quick-q" onclick="sendQuick('What does the Sail Canada Prescription to Rule 46 require of the person in charge?')">Person in charge</span>
+    </div>
+    <div class="chat-input-row">
+      <textarea id="chatInput" rows="1" placeholder="Ask a question about the RRS, NOR, or SIs…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat();}"></textarea>
+      <button id="sendBtn" onclick="sendChat()">➤</button>
+    </div>
+    <div class="cost-note">RRS 2025–2028 · Sail Canada Prescriptions · WS Case Book · API fees go directly to Anthropic</div>
+  </div>
+</div>
+
+</div><!-- app-layout -->
+
+<script>
+// ── API KEY ──────────────────────────────────────────────────────────────────
+let apiKey = localStorage.getItem('pro_regatta_api_key') || '';
+
+function openModal(){ document.getElementById('apiModal').classList.add('open'); }
+function closeModal(){ document.getElementById('apiModal').classList.remove('open'); }
+
+async function saveApiKey(){
+  const k = document.getElementById('apiKeyInput').value.trim();
+  if(!k) return;
+  if(!k.startsWith('sk-ant-')){ alert('Key should start with sk-ant- — check you copied the full key.'); return; }
+  const btn = document.getElementById('saveKeyBtn');
+  btn.textContent='Testing…'; btn.disabled=true;
+  try{
+    const r = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:10,messages:[{role:'user',content:'Hi'}]})
+    });
+    if(r.status===401){btn.textContent='Save Key & Continue';btn.disabled=false;alert('Invalid key — Anthropic rejected it. Check the key and try again.');return;}
+    if(r.status===403){btn.textContent='Save Key & Continue';btn.disabled=false;alert('Key rejected (403). Add a payment method at console.anthropic.com first.');return;}
+  }catch(e){/* network err — save anyway */}
+  btn.textContent='Save Key & Continue'; btn.disabled=false;
+  apiKey=k; localStorage.setItem('pro_regatta_api_key',k);
+  const sb=document.getElementById('apiStatusBtn');
+  sb.textContent='✓ API Key Set'; sb.classList.add('connected');
+  closeModal();
+}
+if(apiKey){ const sb=document.getElementById('apiStatusBtn'); sb.textContent='✓ API Key Set'; sb.classList.add('connected'); }
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────────
+function showSection(name){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('sec-'+name).classList.add('active');
+  document.querySelector('[data-section="'+name+'"]')?.classList.add('active');
+  document.getElementById('mainContent').scrollTo(0,0);
+  closeSidebar();
+}
+function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('open'); }
+function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('open'); }
+function setMA(el){ document.querySelectorAll('.mobile-nav-item').forEach(i=>i.classList.remove('active')); el.classList.add('active'); }
+
+// ── TABS ──────────────────────────────────────────────────────────────────────
+function switchTab(btn,tabId){
+  const sec=btn.closest('.section')||document.body;
+  sec.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  sec.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-'+tabId).classList.add('active');
+}
+
+// ── ACCORDIONS ────────────────────────────────────────────────────────────────
+function toggleAcc(hdr){ hdr.classList.toggle('open'); hdr.nextElementSibling.classList.toggle('open'); }
+
+// ── FILES ─────────────────────────────────────────────────────────────────────
+let fileStore={};
+function fileSelected(inputId,nameBoxId,nameTextId,sizeId,btnId){
+  const f=document.getElementById(inputId).files[0]; if(!f) return;
+  const type=inputId==='norFileInput'?'nor':'si';
+  fileStore[type]=f;
+  document.getElementById(nameBoxId).classList.add('visible');
+  document.getElementById(nameTextId).textContent=f.name;
+  document.getElementById(sizeId).textContent=fmtSz(f.size);
+  document.getElementById(btnId).disabled=false;
+}
+function fmtSz(b){ if(b<1024)return b+' B'; if(b<1048576)return (b/1024).toFixed(1)+' KB'; return (b/1048576).toFixed(1)+' MB'; }
+function clearFile(inputId,nameBoxId,btnId,outputId,rwGrpId){
+  document.getElementById(inputId).value='';
+  const type=inputId==='norFileInput'?'nor':'si'; delete fileStore[type];
+  document.getElementById(nameBoxId).classList.remove('visible');
+  document.getElementById(btnId).disabled=true;
+  const o=document.getElementById(outputId); o.className='review-output'; o.textContent='';
+  document.getElementById(rwGrpId).style.display='none';
+}
+function dragOver(e,zId){ e.preventDefault(); document.getElementById(zId).classList.add('drag-over'); }
+function dragLeave(zId){ document.getElementById(zId).classList.remove('drag-over'); }
+function dropFile(e,inputId,zId,type){
+  e.preventDefault(); dragLeave(zId);
+  if(e.dataTransfer.files.length){
+    fileStore[type]=e.dataTransfer.files[0];
+    document.getElementById(type+'FileName').classList.add('visible');
+    document.getElementById(type+'FileNameText').textContent=fileStore[type].name;
+    document.getElementById(type+'FileSize').textContent=fmtSz(fileStore[type].size);
+    document.getElementById(type+'ReviewBtn').disabled=false;
+  }
+}
+async function readTxt(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=e=>res(e.target.result); r.onerror=()=>rej('Read error'); r.readAsText(file); }); }
+async function readPDF(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=e=>res(e.target.result.split(',')[1]); r.onerror=()=>rej('Read error'); r.readAsDataURL(file); }); }
+
+// ── CLAUDE API ────────────────────────────────────────────────────────────────
+const SYS=`You are an expert sailing race officer and rules consultant specializing in regatta planning under the Racing Rules of Sailing 2025-2028 (RRS), Sail Canada Prescriptions 2025-2028, and the World Sailing Case Book 2021-2024. Help Principal Race Officers and race organizers plan compliant, well-run regattas. Always cite exact rule numbers. Do NOT paraphrase rules. Write at Grade 12 level. Use precise sailing terminology. For Sail Canada events always flag the relevant Sail Canada Prescriptions. Structure answers with clear headings and numbered lists.`;
+
+async function callClaude(messages,maxTokens=1500){
+  if(!apiKey){ openModal(); throw new Error('No API key set.'); }
+  const r=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxTokens,system:SYS,messages})
+  });
+  if(!r.ok){ const e=await r.json().catch(()=>({})); throw new Error(e.error?.message||'API error '+r.status); }
+  const d=await r.json();
+  return d.content.map(b=>b.text||'').join('');
+}
+
+// ── CHAT ──────────────────────────────────────────────────────────────────────
+let chatHistory=[];
+function addMsg(role,text){
+  const box=document.getElementById('chatMessages');
+  const div=document.createElement('div'); div.className='msg '+role; div.textContent=text;
+  box.appendChild(div); box.scrollTop=box.scrollHeight; return div;
+}
+function addLoading(){
+  const box=document.getElementById('chatMessages');
+  const div=document.createElement('div'); div.className='msg loading';
+  div.innerHTML='<div class="typing-dots"><span></span><span></span><span></span></div>';
+  box.appendChild(div); box.scrollTop=box.scrollHeight; return div;
+}
+function sendQuick(t){ document.getElementById('chatInput').value=t; sendChat(); }
+async function sendChat(){
+  const inp=document.getElementById('chatInput');
+  const text=inp.value.trim(); if(!text) return;
+  if(!apiKey){ openModal(); return; }
+  inp.value=''; document.getElementById('sendBtn').disabled=true;
+  addMsg('user',text); chatHistory.push({role:'user',content:text});
+  const ld=addLoading();
+  try{
+    const reply=await callClaude(chatHistory,1200); ld.remove();
+    addMsg('assistant',reply); chatHistory.push({role:'assistant',content:reply});
+    if(chatHistory.length>20) chatHistory=chatHistory.slice(-20);
+  }catch(e){ ld.remove(); addMsg('system','⚠️ '+e.message); }
+  document.getElementById('sendBtn').disabled=false;
+}
+
+// ── REVIEW ────────────────────────────────────────────────────────────────────
+async function reviewDocument(type){
+  const file=fileStore[type]; if(!file){ alert('Please upload a document first.'); return; }
+  if(!apiKey){ openModal(); return; }
+  const out=document.getElementById(type+'ReviewOutput');
+  out.className='review-output visible'; out.textContent='⏳ Reviewing your document…';
+  document.getElementById(type+'RewriteGroup').style.display='none';
+  const p=type==='nor'
+    ?`Review this Notice of Race (NOR) under the Racing Rules of Sailing 2025-2028 and Sail Canada Prescriptions 2025-2028. Provide:\n1. OVERALL RATING: Score out of 100 and one-sentence summary.\n2. MANDATORY ITEMS — PRESENT: List correctly included mandatory items with rule references.\n3. MANDATORY ITEMS — MISSING OR INCOMPLETE: List every missing or incomplete mandatory item with the exact rule that requires it.\n4. RECOMMENDED ITEMS — MISSING: List important recommended items that are absent.\n5. COMPLIANCE ERRORS: Flag any provisions that conflict with the RRS or Sail Canada Prescriptions.\n6. SAIL CANADA SPECIFIC: Flag any Sail Canada Prescription issues.\n7. SUMMARY: Two to three sentences on the key actions needed before this NOR can be published.\nBe direct. Reference exact rule numbers. Do not soften findings.`
+    :`Review these Sailing Instructions (SIs) under the Racing Rules of Sailing 2025-2028 and Sail Canada Prescriptions 2025-2028. Provide:\n1. OVERALL RATING: Score out of 100 and one-sentence summary.\n2. MANDATORY ITEMS — PRESENT: List correctly included mandatory items with rule references.\n3. MANDATORY ITEMS — MISSING OR INCOMPLETE: List every missing or incomplete mandatory item with the exact rule that requires it. Check especially: protest time limit (RRS 61.3), penalty options (RRS 44), scoring (App A), time limits (RRS 35), course description.\n4. RECOMMENDED ITEMS — MISSING: List important recommended items that are absent.\n5. COMPLIANCE ERRORS: Flag any provisions that attempt to change rules that cannot be changed under RRS 86.1, or that conflict with Sail Canada Prescriptions that cannot be changed under Sail Canada Prescription 88.2.\n6. SAIL CANADA SPECIFIC: Flag any Sail Canada Prescription issues.\n7. SUMMARY: Two to three sentences on the key actions needed before these SIs can be issued.\nBe direct. Reference exact rule numbers. Do not soften findings.`;
+  try{
+    let messages;
+    if(file.type==='application/pdf'){
+      const b64=await readPDF(file);
+      messages=[{role:'user',content:[{type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}},{type:'text',text:p}]}];
+    }else{
+      const txt=await readTxt(file);
+      messages=[{role:'user',content:p+'\n\n---\nDOCUMENT:\n'+txt}];
+    }
+    const ans=await callClaude(messages,2000); out.textContent=ans;
+    document.getElementById(type+'RewriteGroup').style.display='flex';
+  }catch(e){ out.textContent='⚠️ Error: '+e.message; }
+}
+
+// ── REWRITE ───────────────────────────────────────────────────────────────────
+async function rewriteDocument(type){
+  const file=fileStore[type]; if(!file) return;
+  if(!apiKey){ openModal(); return; }
+  document.getElementById('rewriteModalTitle').textContent=type==='nor'?'✏️ Rewritten Notice of Race':'✏️ Rewritten Sailing Instructions';
+  document.getElementById('rewriteModalContent').textContent='⏳ Generating compliant document…';
+  document.getElementById('rewriteModal').classList.add('open');
+  const p=type==='nor'
+    ?`Rewrite this Notice of Race to be fully compliant with the Racing Rules of Sailing 2025-2028 and Sail Canada Prescriptions 2025-2028. Preserve all event-specific details from the original. Add all mandatory provisions that are missing, citing the rule that requires them. Remove or correct any provisions that violate the RRS or Sail Canada Prescriptions. Include all recommended best-practice provisions. Format as a clean, professional NOR with numbered sections. Reference rules by rule number throughout. Include at the top: "DRAFT — Reviewed under RRS 2025-2028 and Sail Canada Prescriptions 2025-2028".`
+    :`Rewrite these Sailing Instructions to be fully compliant with the Racing Rules of Sailing 2025-2028 and Sail Canada Prescriptions 2025-2028. Preserve all event-specific details from the original. Add all mandatory provisions that are missing — especially protest time limit (RRS 61.3), penalty procedures (RRS 44), time limits (RRS 35), scoring (App A), safety requirements (RRS 4). Remove or correct any provisions that attempt to change rules that cannot be changed under RRS 86.1, or that conflict with Sail Canada Prescriptions that cannot be changed under Sail Canada Prescription 88.2. Include required Sail Canada Prescriptions. Format as a clean, professionally structured SI document with numbered sections and subsections. Reference rules by number throughout. Include at the top: "DRAFT — Reviewed under RRS 2025-2028 and Sail Canada Prescriptions 2025-2028".`;
+  try{
+    let messages;
+    if(file.type==='application/pdf'){
+      const b64=await readPDF(file);
+      messages=[{role:'user',content:[{type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}},{type:'text',text:p}]}];
+    }else{
+      const txt=await readTxt(file);
+      messages=[{role:'user',content:p+'\n\n---\nORIGINAL DOCUMENT:\n'+txt}];
+    }
+    const res=await callClaude(messages,3000);
+    document.getElementById('rewriteModalContent').textContent=res;
+  }catch(e){ document.getElementById('rewriteModalContent').textContent='⚠️ Error: '+e.message; }
+}
+function closeRewriteModal(){ document.getElementById('rewriteModal').classList.remove('open'); }
+function copyRewrite(){
+  navigator.clipboard.writeText(document.getElementById('rewriteModalContent').textContent).then(()=>{
+    const btn=document.querySelector('#rewriteModal .btn-primary');
+    btn.textContent='✓ Copied!'; setTimeout(()=>{ btn.textContent='📋 Copy to Clipboard'; },2000);
+  });
+}
+document.getElementById('apiModal').addEventListener('click',function(e){ if(e.target===this) closeModal(); });
+document.getElementById('rewriteModal').addEventListener('click',function(e){ if(e.target===this) closeRewriteModal(); });
+</script>
+</body>
+</html>
